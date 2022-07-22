@@ -19,9 +19,15 @@ class Chatbox {
         const data = await fetch('./config.json');
         const json = await data.json();
         const {
-            endpoint
+            endpoint,
+            payload,
+            searchinput
         } = json;
-        this.endpoint = endpoint;
+        Object.assign(this, {
+            endpoint,
+            payload,
+            searchinput
+        });
     }
 
     display() {
@@ -56,7 +62,7 @@ class Chatbox {
         }
     }
 
-    onSendButton(chatbox) {
+    async onSendButton(chatbox) {
         var textField = chatbox.querySelector('input');
         let text1 = textField.value
         if (text1 === "") {
@@ -68,32 +74,29 @@ class Chatbox {
             message: text1
         }
         this.messages.push(msg1);
-
-        fetch(this.endpoint, {
+        const payload = Object.assign({}, this.payload);
+        payload[this.searchinput] = text1;
+        try {
+            const res = await fetch(this.endpoint, {
                 method: 'POST',
-                body: JSON.stringify({
-                    message: text1
-                }),
+                body: JSON.stringify(payload),
                 mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-            })
-            .then(r => r.json())
-            .then(r => {
-                let msg2 = {
-                    name: "Sam",
-                    message: r.answer
-                };
-                this.messages.push(msg2);
-                this.updateChatText(chatbox)
-                textField.value = ''
-
-            }).catch((error) => {
-                console.error('Error:', error);
-                this.updateChatText(chatbox)
-                textField.value = ''
             });
+            const json = await res.json();
+            const response = json[this.searchinput];
+            let msg2 = {
+                name: "Sam",
+                message: response
+            };
+            this.messages.push(msg2);
+        } catch (e) {
+            console.log(e);
+        }
+        this.updateChatText(chatbox)
+        textField.value = ''
     }
 
     async onSpeakButton(message) {
@@ -101,21 +104,19 @@ class Chatbox {
             chatBox
         } = this.args;
         let response = "Sorry, I did not understand that.";;
+        const payload = Object.assign({}, this.payload);
+        payload[this.searchinput] = message;
         try {
             const res = await fetch(this.endpoint, {
                 method: 'POST',
-                body: JSON.stringify({
-                    message
-                }),
+                body: JSON.stringify(payload),
                 mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
             });
             const json = await res.json();
-            ({
-                response: message
-            } = json)
+            response = json[this.searchinput];
         } catch (e) {
             console.log(e)
         }

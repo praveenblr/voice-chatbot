@@ -1,3 +1,8 @@
 {
-    "endpoint": "https://jsonplaceholder.typicode.com/posts"
+    "endpoint": "https://jsonplaceholder.typicode.com/posts",
+    "payload": {
+        "message": ""
+    },
+    "searchinput": "message"
+
 }
